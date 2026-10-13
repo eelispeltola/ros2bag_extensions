@@ -1,4 +1,5 @@
 // Copyright 2023 TierIV
+// Modifications Copyright 2026 Eelis Peltola
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -43,7 +44,8 @@ public:
     bag_message->topic_name = topic_name;
     bag_message->serialized_data =
       rosbag2_storage::make_serialized_message(message.c_str(), message.length());
-    bag_message->time_stamp = time_stamp;
+    bag_message->recv_timestamp = time_stamp;
+    bag_message->send_timestamp = time_stamp;
 
     rosbag2_cpp::writers::SequentialWriter::write(bag_message);
   }
@@ -59,6 +61,14 @@ PYBIND11_MODULE(_writer, m) {
   .def("open", &rosbag2_py_wrapper::SequentialWriterWrapper::open)
   .def("write", &rosbag2_py_wrapper::SequentialWriterWrapper::write)
   .def("remove_topic", &rosbag2_py_wrapper::SequentialWriterWrapper::remove_topic)
-  .def("create_topic", &rosbag2_py_wrapper::SequentialWriterWrapper::create_topic)
+  .def(
+    "create_topic",
+    pybind11::overload_cast<const rosbag2_storage::TopicMetadata &>(
+      &rosbag2_py_wrapper::SequentialWriterWrapper::create_topic))
+  .def(
+    "create_topic",
+    pybind11::overload_cast<const rosbag2_storage::TopicMetadata &,
+    const rosbag2_storage::MessageDefinition &>(
+      &rosbag2_py_wrapper::SequentialWriterWrapper::create_topic))
   .def("split_bagfile", &rosbag2_py_wrapper::SequentialWriterWrapper::split_bagfile_wrapper);
 }

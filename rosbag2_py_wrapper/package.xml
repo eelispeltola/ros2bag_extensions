@@ -1,5 +1,6 @@
 <?xml version="1.0"?>
 <?xml-model href="http://download.ros.org/schema/package_format3.xsd" schematypens="http://www.w3.org/2001/XMLSchema"?>
+<!-- Modified 2026 by Eelis Peltola: removed python_cmake_module dependency. -->
 <package format="3">
   <name>rosbag2_py_wrapper</name>
   <version>0.9.2</version>
@@ -11,7 +12,6 @@
   <buildtool_depend>ament_cmake_auto</buildtool_depend>
 
   <depend>pybind11_vendor</depend>
-  <depend>python_cmake_module</depend>
   <depend>rosbag2_cpp</depend>
   <depend>rosbag2_storage</depend>
 

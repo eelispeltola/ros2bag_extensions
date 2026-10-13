@@ -1,3 +1,5 @@
+# Modified 2026 by Eelis Peltola: updated license metadata to SPDX and test extras.
+
 from setuptools import find_packages
 from setuptools import setup
 
@@ -29,7 +31,11 @@ setup(
     long_description="""\
 The package provides the additional rosbag command for the ROS 2 command line tools.""",
     license='Apache License, Version 2.0',
-    tests_require=['pytest'],
+    extras_require={
+        'test': [
+            'pytest',
+        ],
+    },
     entry_points={
         'ros2bag.verb': [
             'filter = ros2bag_extensions.verb.filter:FilterVerb',

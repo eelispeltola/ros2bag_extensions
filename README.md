@@ -6,14 +6,14 @@ Extension commands for rosbag in ROS 2
 
 Supported ROS distributions:
 
-- humble
+- lyrical
 
 ### Optional
 
 If you want to use `mcap` format bags, you need to install the mcap package in advance.
 
 ```shell
-sudo apt install ros-humble-rosbag2-storage-mcap
+sudo apt install ros-lyrical-rosbag2-storage-mcap
 ```
 
 ### Build
@@ -26,7 +26,7 @@ cd $HOME/extension_ws/src
 git clone git@github.com:tier4/ros2bag_extensions.git
 # build workspace
 cd $HOME/extension_ws
-source /opt/ros/humble/setup.bash
+source /opt/ros/lyrical/setup.bash
 rosdep install --from-paths . --ignore-src --rosdistro=${ROS_DISTRO}
 colcon build --symlink-install --catkin-skip-building-tests --cmake-args -DCMAKE_EXPORT_COMPILE_COMMANDS=ON -DCMAKE_BUILD_TYPE=Release
 ```
@@ -118,3 +118,10 @@ Usage:
 # split input_bag into sliced bags which has 60secs
 ros2 bag slice input_bag -o sliced_bags -d 60
 ```
+
+## Modifications
+
+This is a modified version of [tier4/ros2bag_extensions](https://github.com/tier4/ros2bag_extensions).
+Changes by Eelis Peltola (2026):
+
+- Port to ROS 2 Lyrical (build system, `rosbag2` API changes in `rosbag2_py_wrapper`)
