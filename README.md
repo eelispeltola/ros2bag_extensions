@@ -125,3 +125,4 @@ This is a modified version of [tier4/ros2bag_extensions](https://github.com/tier
 Changes by Eelis Peltola (2026):
 
 - Port to ROS 2 Lyrical (build system, `rosbag2` API changes in `rosbag2_py_wrapper`)
+- `filter`, `merge` and `slice` have been modified to keep the message definitions, QoS profiles, custom data and send timestamps of the input bags, and fail if a message was not written. Some potential remaining issues are listed in [POTENTIAL_KNOWN_ISSUES.md](POTENTIAL_KNOWN_ISSUES.md).

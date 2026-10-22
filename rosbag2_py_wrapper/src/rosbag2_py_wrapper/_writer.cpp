@@ -36,7 +36,8 @@ public:
   /// Write a serialized message to a bag file
   void write(
     const std::string & topic_name, const std::string & message,
-    const rcutils_time_point_value_t & time_stamp)
+    const rcutils_time_point_value_t & recv_timestamp,
+    const rcutils_time_point_value_t & send_timestamp)
   {
     auto bag_message =
       std::make_shared<rosbag2_storage::SerializedBagMessage>();
@@ -44,8 +45,8 @@ public:
     bag_message->topic_name = topic_name;
     bag_message->serialized_data =
       rosbag2_storage::make_serialized_message(message.c_str(), message.length());
-    bag_message->recv_timestamp = time_stamp;
-    bag_message->send_timestamp = time_stamp;
+    bag_message->recv_timestamp = recv_timestamp;
+    bag_message->send_timestamp = send_timestamp;
 
     rosbag2_cpp::writers::SequentialWriter::write(bag_message);
   }
@@ -59,6 +60,7 @@ PYBIND11_MODULE(_writer, m) {
     m, "SequentialWriterWrapper")
   .def(pybind11::init())
   .def("open", &rosbag2_py_wrapper::SequentialWriterWrapper::open)
+  .def("close", &rosbag2_py_wrapper::SequentialWriterWrapper::close)
   .def("write", &rosbag2_py_wrapper::SequentialWriterWrapper::write)
   .def("remove_topic", &rosbag2_py_wrapper::SequentialWriterWrapper::remove_topic)
   .def(

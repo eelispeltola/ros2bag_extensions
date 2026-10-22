@@ -11,16 +11,16 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+#
+# Modified 2026 by Eelis Peltola: keep message definitions, custom data and send timestamps; verify written messages.
 
 import datetime
 import os
 
 from ros2bag.api import check_path_exists
 from ros2bag.verb import VerbExtension
-from rosbag2_py import *
-from rosbag2_py_wrapper import SequentialWriterWrapper
 
-from . import create_reader, get_default_converter_options, get_storage_options, get_starting_time, get_ending_time
+from . import BagWriter, collect_topics, create_reader, get_starting_time, get_ending_time
 
 
 class SliceVerb(VerbExtension):
@@ -39,55 +39,49 @@ class SliceVerb(VerbExtension):
             end_time = info_ending_time
 
         # Open writer
-        storage_options = get_storage_options(output_bag_dir, storage_type)
-        converter_options = get_default_converter_options()
-        writer = SequentialWriter()
-        writer.open(storage_options, converter_options)
+        reader = create_reader(input_bag_dir, storage_type)
+        writer = BagWriter(output_bag_dir, storage_type, reader.get_metadata().custom_data)
 
         # Create topics
-        reader = create_reader(input_bag_dir, storage_type)
-        for topic_type in reader.get_all_topics_and_types():
-            writer.create_topic(topic_type)
+        writer.create_topics(collect_topics([reader]))
 
         kept_topics = []
 
         # Write
         while reader.has_next():
-            topic_name, msg, stamp = reader.read_next()
+            topic_name, msg, stamp, send_stamp = reader.read_next_ext()
             datetime_stamp = datetime.datetime.fromtimestamp(stamp / 1e9)
             if start_time <= datetime_stamp <= end_time:
-                writer.write(topic_name, msg, stamp)
+                writer.write(topic_name, msg, stamp, send_stamp)
                 while kept_topics:
                     kept_topic = kept_topics.pop(0)
-                    writer.write(kept_topic[0], kept_topic[1], stamp)
+                    writer.write(kept_topic[0], kept_topic[1], stamp, kept_topic[2])
 
             elif topic_name in latched_topic:
-                kept_topics.append((topic_name, msg))
+                kept_topics.append((topic_name, msg, send_stamp))
+        writer.close()
 
     ''' Split and save bag files by specifying the duration. '''
     def _bag2slice_with_duration(self, input_bag_dir: str, output_bag_dir: str, duration: float, storage_type: str) -> None:
         # Open writer
-        storage_options = get_storage_options(output_bag_dir, storage_type)
-        converter_options = get_default_converter_options()
-        writer = SequentialWriterWrapper()
-        writer.open(storage_options, converter_options)
+        reader = create_reader(input_bag_dir, storage_type)
+        writer = BagWriter(output_bag_dir, storage_type, reader.get_metadata().custom_data)
 
         # Create topics
-        reader = create_reader(input_bag_dir, storage_type)
-        for topic_type in reader.get_all_topics_and_types():
-            writer.create_topic(topic_type)
+        writer.create_topics(collect_topics([reader]))
 
         # Write
         split_timestamp = None
         while reader.has_next():
-            topic_name, msg, stamp = reader.read_next()
+            topic_name, msg, stamp, send_stamp = reader.read_next_ext()
             if split_timestamp is None:
                 split_timestamp = stamp
-            writer.write(topic_name, msg, stamp)
+            writer.write(topic_name, msg, stamp, send_stamp)
             time_diff = (stamp - split_timestamp) / 1e9
             if time_diff > duration:
                 writer.split_bagfile()
                 split_timestamp = stamp
+        writer.close()
 
     def add_arguments(self, parser, cli_name):
         parser.add_argument(

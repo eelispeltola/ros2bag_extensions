@@ -11,6 +11,8 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+#
+# Modified 2026 by Eelis Peltola: keep message definitions, custom data and send timestamps; verify written messages.
 
 import os
 from typing import List
@@ -20,7 +22,7 @@ from ros2bag.api import check_path_exists
 from ros2bag.verb import VerbExtension
 from rosbag2_py import *
 
-from . import create_reader, get_default_converter_options, get_storage_options
+from . import BagWriter, collect_topics, create_reader, get_storage_options
 
 
 class FilterVerb(VerbExtension):
@@ -48,27 +50,19 @@ class FilterVerb(VerbExtension):
         reader.set_filter(topic_filter)
 
         # Open writer
-        storage_options = get_storage_options(output_bag_dir, storage_type)
-        converter_options = get_default_converter_options()
-        writer = SequentialWriter()
-        writer.open(storage_options, converter_options)
-
-        # get all topics metadata
-        input_bag_all_topics_meta = reader.get_all_topics_and_types()
-        candidate_topic_metadata = [ tm for tm in input_bag_all_topics_meta if tm.name in topic_list]
+        writer = BagWriter(output_bag_dir, storage_type, reader.get_metadata().custom_data)
 
         # Create topics
-        for tm in candidate_topic_metadata:
-            writer.create_topic(tm)
+        writer.create_topics(collect_topics([reader], topic_list))
 
         # Write
         while reader.has_next():
-            topic_name, msg, stamp = reader.read_next()
-            writer.write(topic_name, msg, stamp)
-        del writer
+            topic_name, msg, stamp, send_stamp = reader.read_next_ext()
+            writer.write(topic_name, msg, stamp, send_stamp)
+        writer.close()
 
         # Reindex for cleanup metadata
-        Reindexer().reindex(storage_options)
+        Reindexer().reindex(get_storage_options(output_bag_dir, storage_type))
 
 
     def add_arguments(self, parser, cli_name):
