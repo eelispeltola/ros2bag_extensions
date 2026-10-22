@@ -24,13 +24,12 @@ setup(
     classifiers=[
         'Environment :: Console',
         'Intended Audience :: Developers',
-        'License :: OSI Approved :: Apache Software License',
         'Programming Language :: Python',
     ],
     description='Extensions for rosbag in ROS 2',
     long_description="""\
 The package provides the additional rosbag command for the ROS 2 command line tools.""",
-    license='Apache License, Version 2.0',
+    license='Apache-2.0',
     extras_require={
         'test': [
             'pytest',
